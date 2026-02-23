@@ -1,0 +1,21 @@
+# env
+.env
+
+# virtualenvs
+venv/
+.venv/
+
+# python
+__pycache__/
+*.pyc
+
+# oauth tokens & secrets
+mcp_servers/token.json
+mcp_servers/token_calendar.json
+mcp_servers/credentials.json
+credentials.json
+
+# logs and OS files
+*.log
+.DS_Store
+Thumbs.db
