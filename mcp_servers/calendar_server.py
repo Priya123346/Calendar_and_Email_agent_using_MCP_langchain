@@ -1,8 +1,6 @@
 from datetime import datetime
-
 from googleapiclient.discovery import build
 from mcp.server.fastmcp import FastMCP
-
 from auth import get_calendar_creds
 
 mcp = FastMCP("calendar-tools", host="0.0.0.0", port=9002)

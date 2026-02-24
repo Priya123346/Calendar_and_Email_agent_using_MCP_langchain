@@ -3,15 +3,18 @@ import os
 import re
 from datetime import datetime, timedelta
 from contextlib import AsyncExitStack
+from urllib.parse import urlparse
 from dotenv import load_dotenv
-from mcp_loader import load_mcp_tools
+from mcp_loader import load_mcp_tools, load_mcp_urls_from_file
 from .agent import build_supervisor
 load_dotenv()
 async def main():
     async with AsyncExitStack() as stack:
         gmail_url = os.getenv("GMAIL_MCP_URL", "http://127.0.0.1:9001/mcp")
         calendar_url = os.getenv("CALENDAR_MCP_URL", "http://127.0.0.1:9002/mcp")
-        tools = await load_mcp_tools([gmail_url, calendar_url], stack)
+        urls = [gmail_url, calendar_url] + load_mcp_urls_from_file()
+        print(urls)
+        tools = await load_mcp_tools(urls, stack)
         print("Loaded MCP tools:", [t.name for t in tools])
 
         agent = build_supervisor(tools)
@@ -216,6 +219,11 @@ async def main():
                 return True
             return bool(re.search(r"\b(yes|confirm|send)\b", normalized))
 
+        def extract_domain(text: str) -> str | None:
+            # Basic domain capture e.g. "is example.com available"
+            match = re.search(r"\b([a-z0-9-]+\.[a-z]{2,})\b", text.lower())
+            return match.group(1) if match else None
+
         while True:
             try:
                 query = input("You: ")
@@ -227,6 +235,39 @@ async def main():
             user_extracted = extract_email_details(query)
             if user_extracted:
                 last_email_from_user = user_extracted
+
+            # Force GoDaddy tool for domain availability checks.
+            if re.search(r"\bavailable\b", query.lower()):
+                domain = extract_domain(query)
+                if domain and "godaddy_tool" in tool_map:
+                    try:
+                        result = await tool_map["godaddy_tool"].ainvoke(
+                            {
+                                "tool_name": "domains_check_availability",
+                                # Godaddy MCP expects a string, not a list.
+                                "args": {"domains": domain},
+                            }
+                        )
+                        print("Assistant:", normalize_content(result))
+                        continue
+                    except Exception as exc:
+                        print(f"Error: {exc}")
+                        continue
+
+            if re.search(r"\b(suggest|suggestions)\b", query.lower()):
+                if "godaddy_tool" in tool_map:
+                    try:
+                        result = await tool_map["godaddy_tool"].ainvoke(
+                            {
+                                "tool_name": "domains_suggest",
+                                "args": {"query": query},
+                            }
+                        )
+                        print("Assistant:", normalize_content(result))
+                        continue
+                    except Exception as exc:
+                        print(f"Error: {exc}")
+                        continue
 
             # Respect explicit "don't send email" instructions.
             if is_negative_email(query):

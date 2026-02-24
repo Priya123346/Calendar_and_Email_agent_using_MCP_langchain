@@ -11,6 +11,13 @@ def build_supervisor(tools):
     Tool use:
     - send_email -> for email tasks
     - create_event -> for scheduling
+    - godaddy_tool -> for domain search, suggestions, and availability checks
+
+    Domain tasks:
+    - If the user asks whether a domain is available, ALWAYS call godaddy_tool
+      with tool_name="domains_check_availability" and the domain in args.
+    - If the user asks for domain suggestions, ALWAYS call godaddy_tool
+      with tool_name="domains_suggest" and the query in args.
 
     Confirmation protocol:
     - Collect all required fields (to, subject, body) before asking to confirm.

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "godaddy": {
+      "url": "https://api.godaddy.com/v1/domains/mcp"
+    },
+    "domains":{
+      "url":"https://instantdomainsearch.com/mcp/streamable-http"
+    }
+    
+  }
+}

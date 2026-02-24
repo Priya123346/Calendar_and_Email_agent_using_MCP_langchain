@@ -32,7 +32,6 @@ def _get_creds(scopes, token_path):
 
         with open(token_path, "w", encoding="utf-8") as token_file:
             token_file.write(creds.to_json())
-
     return creds
 
 
